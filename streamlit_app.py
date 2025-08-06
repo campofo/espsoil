@@ -4,10 +4,12 @@ import requests
 import altair as alt
 import plotly.graph_objects as go
 from streamlit_autorefresh import st_autorefresh
+import joblib
+import numpy as np
 
 # === Config ===
 st.set_page_config(page_title="🌿 IoT Sensor Dashboard", layout="centered")
-st.title("🌿 Smart Soil Monitor (Live Data)")
+st.title(":seedling: Smart Soil Monitor (Live Data)")
 
 st_autorefresh(interval=1 * 1000)
 
@@ -26,7 +28,11 @@ def fetch_data():
 
 df = fetch_data()
 
-# === If data available ==s=
+# === Load ML model ===
+model = joblib.load("plant_predictor.pkl")
+label_encoder = joblib.load("plant_label_encoder.pkl")
+
+# === If data available ===
 if df.empty:
     st.warning("No sensor data available yet.")
 else:
@@ -75,6 +81,26 @@ else:
             gauge={'axis': {'range': [2000, 4095]}}
         ))
         st.plotly_chart(fig2, use_container_width=True)
+
+    # === ML Prediction: Suitable Plants ===
+    st.subheader("🌿 Suitable Plants & Viability Score")
+    input_data = np.array([[latest['temperature'], latest['moisture'], latest['humidity']]])
+    probabilities = model.predict_proba(input_data)[0]
+
+    plant_classes = label_encoder.inverse_transform(np.arange(len(probabilities)))
+    viability_df = pd.DataFrame({
+        "Plant": plant_classes,
+        "Viability Score (%)": (probabilities * 100).round(2)
+    })
+    viability_df = viability_df[viability_df["Viability Score (%)"] > 20.0]
+    viability_df = viability_df.sort_values(by="Viability Score (%)", ascending=False)
+
+    if not viability_df.empty:
+        st.dataframe(viability_df.reset_index(drop=True))
+
+        st.bar_chart(viability_df.set_index("Plant"))
+    else:
+        st.warning("⚠️ No suitable plants found for the current conditions.")
 
     # === Trend Visualization ===
     st.subheader("📈 Humidity & Moisture Trends")
