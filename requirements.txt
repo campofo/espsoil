@@ -3,3 +3,4 @@ plotly
 streamlit_autorefresh
 cloudpickle
 scikit-learn
+altair
