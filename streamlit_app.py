@@ -4,7 +4,7 @@ import requests
 import altair as alt
 import plotly.graph_objects as go
 from streamlit_autorefresh import st_autorefresh
-import joblib
+import cloudpickle
 import numpy as np
 
 # === Config ===
@@ -29,8 +29,11 @@ def fetch_data():
 df = fetch_data()
 
 # === Load ML model ===
-model = joblib.load("plant_predictor.pkl")
-label_encoder = joblib.load("plant_label_encoder.pkl")
+with open("plant_predictor.pkl", "rb") as f:
+    model = cloudpickle.load(f)
+
+with open("plant_label_encoder.pkl", "rb") as f:
+    label_encoder = cloudpickle.load(f)
 
 # === If data available ===
 if df.empty:
