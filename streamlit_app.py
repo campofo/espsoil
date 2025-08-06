@@ -11,7 +11,7 @@ import numpy as np
 st.set_page_config(page_title="🌿 IoT Sensor Dashboard", layout="centered")
 st.title(":seedling: Smart Soil Monitor (Live Data)")
 
-st_autorefresh(interval=1 * 1000)
+st_autorefresh(interval=3 * 1000)
 
 API_URL = "https://hunterperry08.pythonanywhere.com/get-data"
 
